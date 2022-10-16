@@ -1,10 +1,9 @@
 name: Laravel
 
 on:
+  workflow_call:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches-ignore: [ "master" ]
 
 jobs:
   laravel-tests:
