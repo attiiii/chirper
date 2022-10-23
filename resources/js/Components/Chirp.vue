@@ -1,6 +1,6 @@
 <script setup>
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import dayjs from 'dayjs';
@@ -17,6 +17,7 @@ const form = useForm({
 });
 
 const editing = ref(false);
+const showingModal = ref(false);
 </script>
 
 <template>
@@ -42,9 +43,9 @@ const editing = ref(false);
                         <button class="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out" @click="editing = true">
                             Edit
                         </button>
-                        <DropdownLink as="button" :href="route('chirps.destroy', chirp.id)" method="delete">
+                        <button class="block w-full px-4 py-2 text-left text-sm leading-5 text-red-700 hover:bg-gray-100 focus:bg-gray-100 transition duration-150 ease-in-out" @click="showingModal = true">
                             Delete
-                        </DropdownLink>
+                        </button>
                     </template>
                 </Dropdown>
             </div>
@@ -58,5 +59,20 @@ const editing = ref(false);
             </form>
             <p v-else class="mt-4 text-lg text-gray-900">{{ chirp.message }}</p>
         </div>
+        <ConfirmModal
+            :open="showingModal"
+            :onClose="() => showingModal = false"
+            :onConfirm="() => form.delete(route('chirps.destroy', chirp.id))"
+            title="Delete Chirp"
+            buttonText="Delete"
+        >
+            <div class="text-sm text-gray-500">
+                <p class="italic">"{{ chirp.message }}"</p>
+                <p>
+                    Are you sure you want to delete this chirp?<br>
+                    This action cannot be undone.
+                </p>
+            </div>
+        </ConfirmModal>
     </div>
 </template>
