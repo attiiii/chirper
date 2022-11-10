@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Notifications\NewChirp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -101,5 +102,28 @@ class ChirpControllerTest extends TestCase
         ]);
 
         Notification::assertNotSentTo([$this->user, ...$this->others], NewChirp::class);
+    }
+
+    public function test_chirps_screen_can_be_rendered_after_verification()
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => null,
+        ]);
+
+        $response = $this->actingAs($user)->get('/chirps');
+        $response->assertRedirect(route('verification.notice'));
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)]
+        );
+        $this->actingAs($user)->get($verificationUrl);
+
+        $response = $this->actingAs($user)->get('/chirps');
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Chirps/Index')
+            );
     }
 }
