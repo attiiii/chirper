@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Notifications\NewChirp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -64,6 +66,25 @@ class ChirpControllerTest extends TestCase
 
         Notification::assertNotSentTo([$this->user], NewChirp::class);
         Notification::assertSentTo($this->others, NewChirp::class);
+    }
+
+    public function test_chirp_attachment_can_be_uploaded()
+    {
+        Storage::fake('local');
+
+        $file = UploadedFile::fake()->image('attachment.jpg');
+
+        $this->actingAs($this->user)
+            ->post('/chirps', [
+                'message' => 'chirp',
+                'file' => $file
+            ]);
+
+        $this->assertDatabaseHas('attachments', [
+            'name' => $file->hashName()
+        ]);
+
+        Storage::disk('local')->assertExists("chirps/{$file->hashName()}");
     }
 
     public function test_chirp_can_be_updated()

@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Http\Requests\ChirpStoreRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
@@ -31,6 +32,14 @@ class ChirpStoreRequestTest extends TestCase
                 true,
                 [],
             ],
+            'success file upload' => [
+                [
+                    'message' => 'This Chirp can be stored.',
+                    'file' => UploadedFile::fake()->image('attachment.jpg')->size(5120)
+                ],
+                true,
+                [],
+            ],
             'empty message' => [
                 [
                     'message' => ''
@@ -54,6 +63,26 @@ class ChirpStoreRequestTest extends TestCase
                 false,
                 [
                     'message' => ['The message must not be greater than 255 characters.']
+                ],
+            ],
+            'wrong file extension' => [
+                [
+                    'message' => 'This Chirp can be stored.',
+                    'file' => UploadedFile::fake()->image('attachment.gif')
+                ],
+                false,
+                [
+                    'file' => ['The file must be a file of type: png, jpg.']
+                ],
+            ],
+            'too large file size' => [
+                [
+                    'message' => 'This Chirp can be stored.',
+                    'file' => UploadedFile::fake()->image('attachment.jpg')->size(5121)
+                ],
+                false,
+                [
+                    'file' => ['The file must not be greater than 5120 kilobytes.']
                 ],
             ]
         ];
