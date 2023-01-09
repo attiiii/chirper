@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ChirpStoreRequest;
 use App\Models\Chirp;
+use App\Services\Uploader\UploadService;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ChirpController extends Controller
@@ -16,7 +18,7 @@ class ChirpController extends Controller
     public function index()
     {
         return Inertia::render('Chirps/Index', [
-            'chirps' => Chirp::with('user:id,name')->latest()->get(),
+            'chirps' => Chirp::with(['user:id,name', 'attachment:chirp_id,disk,path'])->latest()->get(),
         ]);
     }
 
@@ -28,7 +30,15 @@ class ChirpController extends Controller
      */
     public function store(ChirpStoreRequest $request)
     {
-        $request->user()->chirps()->create($request->validated());
+        $chirp = $request->user()->chirps()->create($request->validated());
+
+        if ($request->hasFile('file')) {
+            $file = (new UploadService)->chirpAttachment(
+                file: $request->file('file')
+            );
+
+            $chirp->attachment()->create($file->toArray());
+        }
 
         return redirect(route('chirps.index'));
     }
@@ -58,6 +68,12 @@ class ChirpController extends Controller
     public function destroy(Chirp $chirp)
     {
         $this->authorize('delete', $chirp);
+
+        if ($chirp->attachment) {
+            Storage::disk($chirp->attachment->disk)->delete($chirp->attachment->path);
+
+            $chirp->attachment()->delete();
+        }
 
         $chirp->delete();
 

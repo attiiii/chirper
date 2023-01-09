@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\File;
 
 class ChirpStoreRequest extends FormRequest
 {
@@ -14,7 +15,12 @@ class ChirpStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'message' => 'required|string|max:255'
+            'message' => 'required|string|max:255',
+            'file' => [
+                'nullable',
+                File::types(['png', 'jpg'])
+                    ->max(5 * 1024)
+            ]
         ];
     }
 }
