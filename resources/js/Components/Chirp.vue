@@ -57,7 +57,15 @@ const showingModal = ref(false);
                     <button class="mt-4" @click="editing = false; form.reset()">Cancel</button>
                 </div>
             </form>
-            <p v-else class="mt-4 text-lg text-gray-900">{{ chirp.message }}</p>
+            <div v-else class="mt-4">
+                <p class="text-lg text-gray-900">{{ chirp.message }}</p>
+                <img
+                    v-if="chirp.attachment"
+                    :src="chirp.attachment.url"
+                    alt=""
+                    class="mt-4 object-cover aspect-video w-full rounded-lg"
+                />
+            </div>
         </div>
         <ConfirmModal
             :open="showingModal"
